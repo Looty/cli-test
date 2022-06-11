@@ -6,22 +6,38 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Set your config file",
+	Long: `Setting your configuration via a .yaml file
+Example:
+clit-test config -f config.yaml`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("config called")
+		file, _ := cmd.Flags().GetString("file")
+
+		if file == "" {
+			log.Fatal("You must select a file")
+		}
+
+		fmt.Println("file:", file)
+		viper.SetConfigType("yaml") // REQUIRED if the config file does not have the extension in the name
+		viper.SetConfigName(file)   // name of config file (without extension)
+		viper.AddConfigPath("config/")
+
+		errFile := viper.ReadInConfig() // Find and read the config file
+		if errFile != nil {             // Handle errors reading the config file
+			panic(fmt.Errorf("fatal error config file: %w", errFile))
+		}
+
+		fmt.Println(viper.GetString("email"))
 	},
 }
 
@@ -36,5 +52,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	configCmd.Flags().StringP("file", "f", "", "Config file")
 }
